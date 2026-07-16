@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBA Capstone — Mission Control</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --panel2:#f0f3f7; --line:#dfe6ee;
+    --text:#1c2733; --dim:#54657a; --faint:#8b99a9;
+    --accent:#2f6fe4; --green:#1c9e6c; --amber:#b07d1a; --red:#d0455e; --violet:#7a5af5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:28px 20px 60px}
+  .wrap{max-width:1060px;margin:0 auto}
+  h1{font-size:22px;letter-spacing:.3px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-top:2px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin:34px 0 12px}
+  .grid{display:grid;gap:14px}
+  @media(min-width:840px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .card h3{font-size:14px;margin-bottom:8px}
+  .muted{color:var(--dim);font-size:13px}
+  .tiny{color:var(--faint);font-size:12px}
+
+  /* next-up banner */
+  #next{background:linear-gradient(90deg,#e8f0fd,#ffffff);border:1px solid #b9d0f2;border-radius:12px;padding:16px 18px;margin-top:20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  #next .label{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent)}
+  #next .what{font-size:17px;font-weight:600}
+  #next .when{color:var(--dim);font-size:13px}
+  #next .count{margin-left:auto;font-size:15px;font-weight:600;color:var(--green);white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{color:var(--faint);text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.1em;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid #eef1f5;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr.past{opacity:.45}
+  tr.today td{background:#e8f0fd}
+
+  .chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .c-open{background:#dff3ea;color:var(--green)}
+  .c-close{background:#fbe4e9;color:var(--red)}
+  .c-live{background:#f8ecd4;color:var(--amber)}
+  .c-due{background:#fbe4e9;color:var(--red)}
+  .c-meet{background:#ece6fc;color:var(--violet)}
+  .c-info{background:#e3edfc;color:var(--accent)}
+  .c-done{background:#eef1f5;color:var(--faint)}
+  .day{white-space:nowrap;color:var(--text);font-weight:600}
+  .day small{display:block;color:var(--faint);font-weight:400}
+
+  ul.clean{list-style:none}
+  ul.clean li{padding:7px 0;border-bottom:1px solid #eef1f5;font-size:13.5px;display:flex;gap:10px;align-items:baseline}
+  ul.clean li:last-child{border-bottom:none}
+  ul.clean .k{color:var(--dim);min-width:86px;font-size:12px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .foot{margin-top:30px;color:var(--faint);font-size:12px}
+  .star{color:var(--amber)}
+  .tabs{display:flex;gap:8px;margin-top:20px}
+  .tab{background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:8px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer}
+  .tab.on{background:#e3edfc;border-color:#9dbef0;color:var(--text)}
+  .tabpane{display:none}.tabpane.on{display:block}
+  .tpl h3{font-size:14px;margin:18px 0 8px;color:var(--text)}
+  .tpl p,.tpl li{font-size:13.5px;color:var(--dim)}
+  .tpl b{color:var(--text)}
+  .tpl blockquote{border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;background:var(--panel2);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--text)}
+  .tpl ul{margin:6px 0 6px 18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>MBA <span>Capstone</span> — Mission Control</h1>
+  <div class="sub">BUSA90533 · Melbourne Business School · Instructor: Robyn Rodier · All times Melbourne (AEST)</div>
+  <div class="tiny" style="margin-top:6px">Week map: <b>W1</b> 6–12 Jul · <b>W2</b> 13–19 Jul · <b>W3</b> 20–26 Jul · <b>W4</b> 27 Jul–2 Aug · <b>W5</b> 3–9 Aug · <b>W6</b> 10–16 Aug · <b>W7</b> 17–23 Aug</div>
+
+  <div class="tabs">
+    <button class="tab on" data-t="home" onclick="showTab('home')">📅 Dashboard</button>
+    <button class="tab" data-t="review" onclick="showTab('review')">📝 Syndicate Review</button>
+    <button class="tab" data-t="intel" onclick="showTab('intel')">📈 Market Intel</button>
+    <button class="tab" data-t="r1" onclick="showTab('r1')">🎯 Round 1</button>
+    <button class="tab" data-t="play" onclick="showTab('play')">📖 Playbook</button>
+    <button class="tab" data-t="biz" onclick="showTab('biz')">📋 Business Plan</button>
+    <button class="tab" data-t="pitch" onclick="showTab('pitch')">🎤 Report & Pitch</button>
+  </div>
+
+  <div id="tab-home" class="tabpane on">
+  <div id="next">
+    <div>
+      <div class="label">Next up</div>
+      <div class="what" id="nx-what">—</div>
+      <div class="when" id="nx-when">—</div>
+    </div>
+    <div class="count" id="nx-count"></div>
+  </div>
+
+  <h2>Schedule — rounds, debriefs, deadlines</h2>
+  <div class="card" style="padding:6px 8px">
+    <table id="sched">
+      <thead><tr><th style="width:120px">Date</th><th style="width:110px">Type</th><th>What</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="tiny" style="padding:8px 10px"><span class="star">✱</span> = inferred from weekly pattern — confirm on Canvas</div>
+  </div>
+
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <h3>Deliverables</h3>
+      <table>
+        <thead><tr><th>Item</th><th>Who</th><th>Due</th></tr></thead>
+        <tbody id="deliv"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Recurring meetings</h3>
+      <ul class="clean">
+        <li><span class="k">Sat debriefs</span><span>6:00–6:45pm — W2, W3, W4 <span class="tiny">(R1 debrief only: 7:00pm)</span></span></li>
+        <li><span class="k">Wed debriefs</span><span>8:15–9:00pm — W3, W4, W5</span></li>
+        <li><span class="k">Syndicate OH</span><span><b>Thursdays 7:30pm</b> — our booked weekly slot with Robyn <span class="tiny">(attend as full team, bring specific questions)</span></span></li>
+        <li><span class="k">Open OH</span><span>W1 Wed 8:15pm · W6 Thu 7:00pm</span></li>
+        <li><span class="k">Platform</span><span>Engageli — attend <b>every</b> debrief, not one per week</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <h3>Links</h3>
+      <ul class="clean">
+        <li><span class="k">Debrief room</span><a href="https://mbsedu.instructure.com/groups/10195">Live debriefs (Engageli via group page)</a></li>
+        <li><span class="k">Syndicate</span><a href="https://mbsedu.instructure.com/groups/10241">Syndicate Group 2 · BUSA90560 SP426</a></li>
+        <li><span class="k">Outline</span><a href="https://courseapps.online.mbs.edu/courses/MBA/BUSA9XXXX_Managing_in_a_global_environment/Documents/Subject_outline_BUSA90533_MBA_Capstone.pdf">Subject outline (PDF)</a></li>
+        <li><span class="k">Canvas</span><a href="https://mbsedu.instructure.com/courses/5157">Capstone course home</a></li>
+        <li><span class="k">Student HQ</span><a href="https://mbsedu.instructure.com/courses/3646">MBA Student HQ</a></li>
+        <li><span class="k">Calendar</span><a href="https://online.mbs.edu/academic-calendar">Academic calendar</a></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Help & rules of thumb</h3>
+      <ul class="clean">
+        <li><span class="k">Public Qs</span><span>Yellowdig chat (not DMs) or office hours</span></li>
+        <li><span class="k">Private Qs</span><span><a href="mailto:r.rodier@mbs.edu">r.rodier@mbs.edu</a></span></li>
+        <li><span class="k">Golden rule</span><span>Finalise decisions <b>hours</b> before each close — treat deadlines like flight departures</span></li>
+        <li><span class="k">Grading frame</span><span>Survive first → then shareholder returns, EPS, cash, capital structure, end-state of company</span></li>
+        <li><span class="k">Sim</span><span>7 competition rounds, syndicate of ~5, all teams start identical · then Comp-XM (individual)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  </div><!-- /tab-home -->
+
+  <div id="tab-review" class="tabpane">
+    <div class="card tpl" style="margin-top:20px">
+      <h3 style="margin-top:0">Preliminary Syndicate Review — how to nail it</h3>
+      <p><b>Due Fri 17 Jul 23:59</b> · worth 2.5% across both parts · <b>Part 2</b> (feedback-on-feedback) opens after the deadline — don't forget it.</p>
+      <p>Canvas reveals the exact rubric when you open the activity. This works for any version: score honestly, back every score with one specific example from charter week.</p>
+
+      <h3>Rating dimensions (typical 1–5)</h3>
+      <ul>
+        <li><b>Contribution / reliability</b> — showed up, did their SWOT, met the charter deadline</li>
+        <li><b>Quality</b> — input was thoughtful and usable as-is</li>
+        <li><b>Communication</b> — responsive, clear, flagged availability</li>
+        <li><b>Collaboration</b> — listened, built on ideas, flexible</li>
+        <li><b>Initiative</b> — volunteered, moved the team forward unprompted</li>
+      </ul>
+      <p>Rules: 4 = solid · 5 = exceptional (reserve it) · 3 = fine with one concrete gap · comments must match scores · grade the <b>charter process</b>, not imagined future performance.</p>
+
+      <h3>Comment formula — every person, 3–5 sentences</h3>
+      <blockquote>"[Name] did <b>[specific thing]</b> during the charter process, which <b>[impact]</b>. Keep doing <b>[strength]</b>. Going into the rounds, it would help the team if <b>[one actionable suggestion]</b>."</blockquote>
+
+      <h3>Drafts (personalise the brackets)</h3>
+      <blockquote><b>Self:</b> "I contributed [practice-round experience / X sections] and pushed for clear decision rules and deadline buffers. Strengths this week: decisiveness and structure. I'm time-poor and inclined to take on too much — I've asked the team to hold me to scope, and I'll flag roster clashes early. To improve: leave more space for discussion before converging."</blockquote>
+      <blockquote><b>Ben:</b> "Ben [drafted/structured X] and synthesised different views into decisions — his written polish lifted the charter. Continue the integrator role. I'd encourage him to lean into the finance decisions he flagged as a growth area — the team can support that."</blockquote>
+      <blockquote><b>Akshaya / Rohit:</b> "[Name] [specific contribution]. [Impact]. Continue [strength]. Consider [one suggestion — e.g. earlier availability signals / owning a sim department]."</blockquote>
+
+      <h3>Part 2 script (after deadline)</h3>
+      <blockquote>"Thanks [Name] — fair and specific. The point about [X] is useful; I'll [action] in the coming rounds."</blockquote>
+
+      <h3>Traps</h3>
+      <ul>
+        <li>All-5s with vague praise (reads as low effort)</li>
+        <li>Scores contradicting comments</li>
+        <li>Critiquing personality instead of behaviour</li>
+        <li>Writing about the sim instead of teamwork</li>
+      </ul>
+    </div>
+  </div><!-- /tab-review -->
+
+  <div id="tab-intel" class="tabpane">
+    <div class="card" style="margin-top:20px;border-color:#e3c98a">
+      <b>Industry CP133942_2 · Round 1 (2027) loaded</b>
+      <div class="muted" style="margin-top:4px">⚠ Awaiting context: your syndicate's company not yet assigned — analysis below is industry-wide. Same market template as practice (segments, growth, drift all identical) — the playbook transfers 1:1.</div>
+    </div>
+
+    <h2>Round 1 headlines</h2>
+    <div class="grid g3">
+      <div class="card"><h3>💥 Andrews imploded</h3><div class="muted">Priced Low End at $34 (sold 2 units), one product unsellable (sold 0), ~3,800 units stuck in inventory → <b>−$25.2M loss, $84.3M emergency loan</b>, leverage 6.2. Effectively out of the race in round 1.</div></div>
+      <div class="card"><h3>🥇 Baldwin leads</h3><div class="muted">$10.3M profit on $140M sales. Priced at range tops ($29.50 Trad / $39.50 HE), revised Baker early (Mar), running Bead at 164% util. The team to beat.</div></div>
+      <div class="card"><h3>🎯 Nobody owns the niches</h3><div class="muted">High End, Performance & Size all mid-pack CSS, modest positions, auto 3, small capacity. The premium segments are wide open for a supply-disciplined player.</div></div>
+    </div>
+
+    <h2>Standings — profit & sales</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Round 1 profit ($000)</h3><div id="chart-profit"></div></div>
+      <div class="card"><h3>Round 1 sales ($000)</h3><div id="chart-sales"></div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Company scorecard</h3>
+      <table id="intel-table">
+        <thead><tr><th>Company</th><th>Profit</th><th>Sales</th><th>CM%</th><th>Emergency loan</th><th>Read</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>Opportunities</h3>
+        <ul class="clean">
+          <li>🩸 <b>Andrews' customers are orphaned</b> — their Traditional & Low End volume is up for grabs while they dig out of the loan</li>
+          <li>📈 Premium segments under-invested industry-wide (auto 3, capacity ≤600) — first mover on supply wins</li>
+          <li>🐌 Erie's Echo badly positioned in High End (7.0/12.9, MTBF 17k — below segment floor); Egg locked to Dec 2028</li>
+          <li>💰 Low End price war not yet started ($20.00–22.00) — room to undercut with automation</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Threats</h3>
+        <ul class="clean">
+          <li>⚔️ Baldwin & Ferris both price at range tops AND execute revisions on time — disciplined humans, not bots</li>
+          <li>🏭 Cedar (Chester) at automation 6.5 next round — committing to the Low End cost war early</li>
+          <li>📊 Five teams (not one) fight properly for Traditional — shares will fragment</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;border-color:#9dbef0">
+      <h3>Strategy queue (updates each round)</h3>
+      <ul class="clean">
+        <li><b>1.</b> Confirm which company we run → re-anchor this whole tab to our position</li>
+        <li><b>2.</b> Round 1 opens Tue: run the practice playbook — reposition everything in-year, MTBF by segment weight, prices at psychology points, forecast to potential</li>
+        <li><b>3.</b> Watch Andrews' recovery moves — distressed rivals dump capacity cheap and price erratically</li>
+        <li><b>4.</b> Claim one premium segment (Size or Performance) hard by round 3 — capacity + automation early, exactly like practice-Agape</li>
+        <li><b>5.</b> Decide in R1: launch a 2nd High End product? (~2yr build → sells R3–7 into a 16%/yr segment). If yes, it must be in the first save.</li>
+      </ul>
+    </div>
+
+    <h2>Trends (builds as rounds land)</h2>
+    <div class="card"><div id="chart-trend" class="muted">Profit trend chart activates from round 2 — upload each Courier and this fills in.</div></div>
+  </div><!-- /tab-intel -->
+
+
+  <div id="tab-r1" class="tabpane">
+    <div class="card" style="margin-top:20px;border-color:#e3c98a">
+      <b>Round 1 Courier · Industry CP133942_2 · Year 2027</b>
+      <div class="muted" style="margin-top:4px">Our company: <b>to be confirmed</b>. Same market template as practice: all criteria, growth rates and drift match. Round 2 targets below are computed from the published drift.</div>
+    </div>
+
+    <h2>Standings after Round 1</h2>
+    <div class="card" style="padding:6px 8px">
+      <table>
+        <thead><tr><th>Co.</th><th>Profit</th><th>Sales</th><th>CM%</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td><b>Baldwin</b></td><td>$10.3M</td><td>$140.3M</td><td>32.5%</td><td class="muted">Leader. Top-of-range prices, on-time revisions, Bead at 164% utilisation</td></tr>
+          <tr><td><b>Ferris</b></td><td>$9.4M</td><td>$128.1M</td><td>32.4%</td><td class="muted">Strong #2. Feat running 180% utilisation in Low End</td></tr>
+          <tr><td><b>Digby</b></td><td>$8.5M</td><td>$131.9M</td><td>32.6%</td><td class="muted">Solid all-round; Duck led its High End push</td></tr>
+          <tr><td><b>Erie</b></td><td>$6.4M</td><td>$126.2M</td><td>28.4%</td><td class="muted">Ebb won Low End volume (2,409) at $20.00; Echo mispositioned in High End</td></tr>
+          <tr><td><b>Chester</b></td><td>$5.9M</td><td>$134.0M</td><td>28.4%</td><td class="muted">Cedar at 179% utilisation, automation 6.5 next round: committing to Low End cost war</td></tr>
+          <tr><td><b>Andrews</b></td><td>−$25.2M</td><td>$45.0M</td><td>9.7%</td><td class="muted"><b>$84.3M emergency loan.</b> Priced products outside segment ranges (rough cut = zero score). ~3,800 units stranded in inventory</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Segment snapshot and Round 2 targets (2028)</h2>
+    <div class="card" style="padding:6px 8px">
+      <table>
+        <thead><tr><th>Segment</th><th>2027 size</th><th>Growth</th><th>R1 leader</th><th>2028 ideal spot</th><th>2028 price range</th></tr></thead>
+        <tbody>
+          <tr><td>Traditional</td><td>8,067</td><td>9.2%</td><td>Baker 1,560</td><td><b>6.4 / 13.6</b></td><td>$19.00 to $29.00</td></tr>
+          <tr><td>Low End</td><td>10,009</td><td>11.7%</td><td>Ebb 2,409 @ $20.00</td><td><b>2.7 / 17.3</b> (do not chase; age wins)</td><td>$14.00 to $24.00</td></tr>
+          <tr><td>High End</td><td>2,967</td><td>16.2%</td><td>Adam 580 (pre-collapse)</td><td><b>10.7 / 9.3</b></td><td>$29.00 to $39.00</td></tr>
+          <tr><td>Performance</td><td>2,294</td><td>19.8%</td><td>Coat 545</td><td><b>11.4 / 14.6</b> · MTBF 27,000</td><td>$24.00 to $34.00</td></tr>
+          <tr><td>Size</td><td>2,347</td><td>18.3%</td><td>Dune 503</td><td><b>5.4 / 8.6</b></td><td>$24.00 to $34.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>Openings we can attack</h3>
+        <ul class="clean">
+          <li>🩸 <b>Andrews is a corpse.</b> Their Traditional and Low End customers are orphaned for at least two rounds while they service an $84M loan. Their volume is free share for whoever supplies it.</li>
+          <li>🎯 <b>Premium segments are under-supplied.</b> Every company still runs automation 3 and 600 or less capacity in High End, Performance and Size. First mover on supply owns segments growing 16 to 20% a year.</li>
+          <li>🐌 <b>Erie's Echo is lost in High End</b> (position 7.0/12.9, MTBF 17k, below the segment floor). Effectively a five-player segment.</li>
+          <li>💤 Half the field left MTBF and prices at defaults. Buying-criteria discipline alone wins points.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Threats to respect</h3>
+        <ul class="clean">
+          <li>⚔️ Baldwin and Ferris execute: on-time revisions, range-top prices, second shifts running. They know the game.</li>
+          <li>🏭 Chester's Cedar goes to automation 6.5 next round: the Low End price floor will fall fast. Match automation or concede price.</li>
+          <li>📉 Andrews' fire-sale exit could dump cheap inventory into Traditional and Low End for a round.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;border-color:#9dbef0">
+      <h3>Round decision settings</h3>
+      <div class="muted">Reserved. Once our company is confirmed, this section will carry the recommended slider-by-slider settings for each round: R&D targets with walk-backs, prices, forecasts, production schedules, plant moves, HR, TQM and finance, aligned to the strategy in the Business Plan tab.</div>
+    </div>
+  </div><!-- /tab-r1 -->
+
+  <div id="tab-play" class="tabpane">
+    <div class="card tpl" style="margin-top:20px">
+      <h3 style="margin-top:0">The Playbook — 8 rules from 8 practice rounds</h3>
+      <p class="tiny">Proof: last in profit R1 → #1 every round after · stock $34 → $175 · cumulative profit +43% vs 2nd place</p>
+      <ul>
+        <li><b>1 · R&D is the engine.</b> Hit the drifted ideal every year, complete in-year (walk-back method). Exception: Low End ages to 7.0 — leave it, then one decisive reset.</li>
+        <li><b>2 · Produce to potential, not fear.</b> "Potential Sold" in the Courier is the truth. Best-CSS products earn above fair share. We left ~$60M on the table learning this.</li>
+        <li><b>3 · Invest early, harvest late.</b> Automation on volume lines R1–2; capacity by R4; after R5 stop buying and shovel cash to shareholders.</li>
+        <li><b>4 · Price by segment psychology.</b> Premium segments (price 9–19%): top of range, always. Low End (53%): fight — unless capacity-constrained, then RAISE price and bank margin.</li>
+        <li><b>5 · HR + TQM compound.</b> Spend big and steady ($1,500×3 HR, ~$1k×7–10 TQM): turnover 5% vs 13%, R&D cycle −22% — which powers rule 1.</li>
+        <li><b>6 · Finance serves the machine.</b> Cash ≥8% of sales (emergency loan = death). Bonds fund plant. Too profitable → under-levered → dividends & buybacks, never retire debt below 1.8.</li>
+        <li><b>7 · Read the Courier like a predator.</b> Stockouts = orphaned customers. Locked R&D = free share for years. New products & capacity moves telegraph strategy.</li>
+        <li><b>8 · Process wins.</b> Decisions hours early. Pre-save checklist: dates in-year → leverage ≥1.8 → closing cash safe → profit above bar.</li>
+      </ul>
+
+      <h3>Instructor intel (Robyn's hints)</h3>
+      <ul>
+        <li><b>7 rounds, not 8</b> — investment window is R1–3, harvest R5–7.</li>
+        <li><b>Be bold in Round 1.</b> Wait-and-see costs 2–3 years of catch-up. Commit to a direction immediately.</li>
+        <li><b>New product = ~2 years to build.</b> Launch in R1 → selling by R2–3 → pays for 4–5 rounds. If we want a second premium product, it must start NOW.</li>
+        <li><b>Killing a product = ~2 years.</b> And the fire-sale trap: when discontinuing, sell capacity down to <b>1 unit, never all of it</b> (599 of 600). Selling 100% triggers forced liquidation of remaining inventory at 50% of COST. Sell the last unit the following year.</li>
+        <li><b>"Big Al"</b> = the emergency lender. Meeting him once ≈ what happened to Andrews in the example game (−$25M, $84M loan, leverage 6.2).</li>
+        <li>Sim rewards <b>virtuous cycles + time lags</b> (our HR/TQM compounding) and punishes standing still. Game theory applies — anticipate rivals, don't just react.</li>
+      </ul>
+
+      <h3>Research-validated mechanics (official Capsim guides)</h3>
+      <ul>
+        <li><b>The demand score formula.</b> Customer Survey Score = base score (out of 100, from the weighted buying criteria) times [(1 + awareness) / 2] times [(1 + accessibility) / 2]. At 50% awareness a product loses a quarter of its score. At 100% it loses nothing. Pushing awareness and accessibility toward 100% on volume products is one of the highest-leverage spends in the game.</li>
+        <li><b>A/R credit terms cut the score too</b> (official numbers): 120 days = no penalty. 60 days = 1.5% penalty. 30 days = 5% penalty. 0 days = 40% penalty. <b>Action: set A/R to 60 days in Round 1</b> (recovers most of the penalty for a small cash-timing cost). Revisit 90 to 120 days later when cash is deep.</li>
+        <li><b>Scoring is monthly and relative.</b> Customers score products every month and split that month's sales in proportion to scores. What matters is the SPREAD between our score and rivals' scores, not the absolute number. The ideal spot and ideal age move every month, so a product can only be perfect one month a year. The December score is what the Courier publishes.</li>
+        <li><b>Rough cuts zero the score:</b> price outside the segment range, position outside the perceptual-map circle, or MTBF below the range floor. This is what killed Andrews in the example game. Never breach a range.</li>
+        <li><b>Perfect product definition:</b> price at the BOTTOM of the range, position at the ideal spot, MTBF at the TOP of the range, ideal age. We deliberately give up a few points on low-weight criteria (price in premium segments, MTBF in Low End) to bank margin. That trade is intentional and profitable.</li>
+        <li><b>TQM demand boost:</b> Channel Support + QFD + CCE/6-Sigma together lift product scores by up to 10%. All three are in our TQM bundle.</li>
+        <li><b>Advanced Marketing module (only if enabled):</b> the Sales Budget then splits into Accessibility (infrastructure, remembered year to year) and Time Allocations (this year only, up to +15% score, taken from other products). Check round 1 screens; if present, weight time toward our highest-margin products.</li>
+        <li><b>Stock price = book value + EPS + dividends.</b> Nothing else. Dividends above EPS add nothing. An emergency loan smashes the price. Profits converted to EPS and dividends are the whole game in the end years.</li>
+        <li><b>Strategy label for the plan:</b> ours maps to Capsim's "Broad Differentiator" archetype, run with cost discipline.</li>
+      </ul>
+    </div>
+  </div><!-- /tab-play -->
+
+  <div id="tab-biz" class="tabpane">
+    <div class="card" style="margin-top:20px;border-color:#e3c98a">
+      <b>Business Plan — due Tue 21 Jul 12:00pm · 20% of grade</b>
+      <div class="muted" style="margin-top:4px">Kickoff Thu 16 Jul · draft §2–4 before R1 closes · finalise with R1 results Mon 20 Jul in person @MBS · Ben's consistency pass Mon evening</div>
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">Executive Summary <span class="chip c-open">DRAFT v2</span></h3>
+      <p>We will run this company as a <b>Broad Differentiator with cost discipline</b>. We compete in all five market segments. We aim to hold the best-rated product in each premium segment, the lowest cost base in the price-driven segments, and a balance sheet that never needs emergency funding.</p>
+      <p>Our advantage compounds over time. Sustained investment in people (HR), quality programs (TQM) and automation shortens our R&D cycle, lifts productivity and cuts unit costs. Faster R&D produces better-rated products. Better products earn above-average share and margin. Those profits fund the next round of investment and, from Year 2, a growing stream of dividends and buybacks. The simulation rewards exactly this loop: its share price model values earnings per share, book value and dividends, and nothing else.</p>
+      <p>The plan in one sentence: invest hard in Years 1 to 3, lead the market in Years 3 to 5, and harvest in Years 6 and 7, finishing with the industry's highest cumulative profit, a share price supported by real earnings, and a clean company for the next management team.</p>
+    </div>
+    <div class="card" style="margin-top:14px;padding:6px 8px">
+      <table>
+        <thead><tr><th>§</th><th>Section</th><th>Pts</th><th>Owner</th><th>Finalise</th><th>Status / seed</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Round 1 analysis — what happened, why, lessons</td><td>3</td><td>Akshaya</td><td>after Sat 18, 5pm</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">full text below</span></td></tr>
+          <tr><td>2</td><td>Business model — segments, value prop, "how we win"</td><td>3</td><td>Rohit</td><td>draft now</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">see Strategy to Win below</span></td></tr>
+          <tr><td>3</td><td>Org structure — roles, succession</td><td>3</td><td>Ben</td><td>anytime</td><td class="muted">Leader: Ben · R&D: Ben · Marketing: Akshaya · Production: Rohit · Finance: Mitchell · rotating facilitator</td></tr>
+          <tr><td>4a</td><td>R&D / Product strategy</td><td>2</td><td>Ben</td><td>Thu 16 kickoff</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">functional strategies below</span></td></tr>
+          <tr><td>4b</td><td>Marketing strategy</td><td>2</td><td>Akshaya</td><td>Thu 16 kickoff</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">functional strategies below</span></td></tr>
+          <tr><td>4c</td><td>Production strategy</td><td>2</td><td>Rohit</td><td>Thu 16 kickoff</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">functional strategies below</span></td></tr>
+          <tr><td>4d</td><td>Finance strategy</td><td>2</td><td><b>Mitchell</b></td><td>after 4a–4c</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">full text below</span></td></tr>
+          <tr><td>5</td><td>Targets & forecasts + KPI weightings</td><td>3</td><td><b>Mitchell</b></td><td>Sun 19–Mon 20</td><td><span class="chip c-open">DRAFTED ✓</span> <span class="muted">full text below — refine with R1 actuals</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§1 Round 1 Analysis: what happened and what we learned <span class="chip c-open">DRAFT v2 (Akshaya to personalise)</span></h3>
+      <p><b>Market outcome.</b> The industry sold 26,684 units across five segments in 2027. Baldwin led the year with $10.3M net profit on $140.3M of sales (32.5% contribution margin), followed by Ferris ($9.4M) and Digby ($8.5M). The leaders shared three behaviours: products revised early in the year, prices held at or near the top of each segment range, and second shifts running in the volume segments.</p>
+      <p><b>The Andrews failure, examined.</b> Andrews finished with a $25.2M loss, $45M of sales and an $84.3M emergency loan. The cause was not bad luck but rule violations. Two products were priced outside their segment ranges (a Low End product at $34.00 against a $14.50 to $24.50 range, and a second product at $42.75, above every range in the market). A price outside the range fails the "rough cut" and sets the product's customer score to zero: sales do not fall, they stop. Roughly 3,800 finished units sat unsold in inventory, consuming cash, while interest on the emergency loan compounded the damage. Andrews' remaining customers are now available to the rest of the market.</p>
+      <p><b>Four lessons for our plan.</b></p>
+      <ul>
+        <li><b>Respect the ranges.</b> Price and reliability must sit inside each segment's published expectations, every product, every year. This is a hard constraint, not a preference.</li>
+        <li><b>Revise early.</b> Products updated in the first half of the year sell at improved specifications for most of the year. Late revisions give away months of demand.</li>
+        <li><b>Supply wins share.</b> The best Low End performers ran plants at 160 to 186% of first-shift capacity and still sold out. Unmet demand existed across the market. Capacity and production planning is a competitive weapon, not an administrative task.</li>
+        <li><b>Cash failure is a spiral, not a setback.</b> The emergency loan arrives exactly when revenue is weakest and adds interest costs that make the next year worse. Our finance policy treats it as a never event.</li>
+      </ul>
+      
+      
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§3 Organisational structure <span class="chip c-open">DRAFT v2 (Ben to personalise)</span></h3>
+      <p>The company is organised as four departments with a single accountable owner each, mirroring the simulation's decision screens. Owners draft their department's decisions before each team meeting and defend them to the group. Nothing is saved until all four owners agree the round is internally consistent and fully funded.</p>
+      <table>
+        <thead><tr><th>Department</th><th>Owner</th><th>Backup</th><th>Accountable for</th></tr></thead>
+        <tbody>
+          <tr><td>R&D / Product</td><td>Ben</td><td>Rohit</td><td>Positioning targets, MTBF specs, revision timing, new product decisions</td></tr>
+          <tr><td>Marketing</td><td>Akshaya</td><td>Ben</td><td>Prices, promotion and sales budgets, A/R terms, demand forecasts</td></tr>
+          <tr><td>Production</td><td>Rohit</td><td>Akshaya</td><td>Schedules, capacity, automation, plant utilisation</td></tr>
+          <tr><td>Finance</td><td>Mitchell</td><td>Ben</td><td>Funding plan, cash floor, leverage, dividends and buybacks, proforma verification</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px"><b>Governance.</b> Ben leads the syndicate; the meeting facilitator role rotates each week. Decisions are made by consensus first; if the team splits, the department owner decides within their area and the leader breaks company-wide ties. Decisions are locked and saved hours before every deadline (the "flight departure" rule). If a member is unavailable, their department brief is posted in advance and the team decides with their written input. This structure also gives the final report a clean narrative: each owner writes the journey review for their own department.</p>
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§4a to §4c Functional strategies <span class="chip c-open">DRAFT v2 (owners to personalise)</span></h3>
+      <p><b>§4a R&D and Product strategy (Ben).</b></p>
+      <p><b>Objective:</b> hold the highest customer survey score in High End, Performance and Size every December, and keep every product inside its segment's fine cut all year.</p>
+      <ul>
+        <li>Every product is repositioned to its segment's new ideal spot every year. Projects must finish inside the calendar year: set the ideal, then pull back in 0.1 steps until the completion date fits December. A project that crosses the year boundary locks the product out of further revision and is not acceptable.</li>
+        <li>Low End is the deliberate exception. Its customers value old products (ideal age 7 years), so the product is left to age and is reset only when it ages past the peak. Its reliability spec sits at the bottom of the range to minimise material cost in a segment where price is 53% of the decision.</li>
+        <li>Reliability specs sit at the top of the range in Performance (43% of the buying decision) and High End, and at the floor in Low End. Each 1,000 hours of MTBF costs about $0.30 per unit in materials, so every spec is a priced decision.</li>
+        <li>HR scientist funding and the TQM engineering programs (Concurrent Engineering, QFD) cut project times by 20% or more. This is the enabling investment for the whole product strategy: it lets us reach next year's ideal while rivals sit at this year's.</li>
+        <li>Round 1 decision: whether to launch a second High End product. It takes about two years to build and would sell from Year 3 into a segment growing 16.2% a year. If approved it must be started in the first save.</li>
+      </ul>
+      <p><b>§4b Marketing strategy (Akshaya).</b></p>
+      <p><b>Objective:</b> convert product quality into demand by keeping awareness and accessibility climbing toward 100%, pricing to each segment's psychology, and forecasting accurately enough that production never guesses.</p>
+      <ul>
+        <li>Pricing follows the buying criteria weights. High End, Performance and Size weigh price at only 9 to 19%, so we price at or near the top of the range and take the margin. Low End weighs price at 53%, so we stay within $0.50 of the cheapest credible rival. Traditional (23%) is priced competitively but never at the bottom. All prices step down as the published ranges fall $0.50 each year. No price ever leaves its range.</li>
+        <li>Promotion and sales budgets run at about $1,400 per volume product and $1,200 per niche product each year. The survey score is multiplied by both awareness and accessibility factors, so these budgets protect every point the products earn. Spend beyond $1,500 hits diminishing returns and is avoided.</li>
+        <li>A/R terms are set to 60 days from Round 1, cutting the demand score penalty from 5% (at 30 days) to 1.5%. We revisit longer terms when cash is deep.</li>
+        <li>Forecasts are built from segment size, growth and our expected share of potential demand, cross-checked against the Courier's potential-sold figures each round. Forecast misses above 10% are reviewed and explained at the next meeting.</li>
+      </ul>
+      <p><b>§4c Production strategy (Rohit).</b></p>
+      <p><b>Objective:</b> never lose a sale to a stockout on a premium product, and drive unit costs down every year through automation and utilisation.</p>
+      <ul>
+        <li>Schedules equal best-case demand (forecast plus about 10%) minus inventory on hand, grossed up for the payment-terms adjustment. A small inventory carry costs a few percent; a stockout hands whole customers to rivals in a market where demand splits by score spread.</li>
+        <li>Automation rises early on the volume lines (Traditional and Low End first), because each point cuts labour cost by roughly 10% and pays back inside two to three rounds. Automation on frequently repositioned products is raised more carefully, as it slows R&D projects.</li>
+        <li>Capacity is bought one year ahead of demand growth (it arrives the following year). Target utilisation is 90 to 180% including second shift; sustained running above 180% triggers a capacity purchase.</li>
+        <li>Fire-sale rule: if a line is ever discontinued, capacity is sold down to one unit in the exit year and the last unit the following year. Selling 100% in one year forces the simulation to liquidate remaining inventory at half cost.</li>
+        <li>Workforce: training and assembly-team investment through HR keeps turnover low and the productivity index rising, which lowers effective labour cost every year.</li>
+      </ul>
+    </div>
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§4d Finance Strategy <span class="chip c-open">DRAFT v2, copy-ready</span></h3>
+
+      <p><b>Objective.</b> Our finance strategy has three clear goals, in this order:</p>
+      <ul>
+        <li><b>1.</b> Never run out of cash. We will not take an emergency loan at any point in the seven years.</li>
+        <li><b>2.</b> Fully fund the operating plan. R&D, plant and marketing get the money they need in Years 1 to 3, when investment earns the most.</li>
+        <li><b>3.</b> Grow shareholder returns. Earnings per share, dividends and the share price should rise every year from Year 2.</li>
+      </ul>
+
+      <p><b>Assumptions this strategy relies on.</b></p>
+      <ul>
+        <li>Plant investment (automation and capacity) of roughly $25M to $35M is needed across Years 1 to 3. After that, spending drops sharply.</li>
+        <li>Borrowing costs run at about 10% to 14% depending on our credit rating. A better rating means cheaper debt, so the rating is worth protecting.</li>
+        <li>The simulation rewards a leverage ratio (assets divided by equity) between 1.8 and 2.8. Outside that band we lose points.</li>
+        <li>The share price is driven mainly by earnings per share, book value and dividends. A dividend is only valued up to the level of earnings per share.</li>
+        <li>Profits from Year 2 onward are large enough to fund most spending internally, so heavy borrowing is only needed early.</li>
+      </ul>
+
+      <p><b>The five rules we will follow.</b></p>
+      <ul>
+        <li><b>1. Match the loan to the asset.</b> Long-term bonds pay for plant and equipment. Short-term (current) debt covers working capital only. We do not use short-term money for long-term assets.</li>
+        <li><b>2. Keep a cash safety floor.</b> Closing cash stays at 8% of forecast sales or higher, every year. Before saving each round we test the plan against sales coming in 10% below forecast. The floor must survive that test.</li>
+        <li><b>3. Pay shareholders once profits allow.</b> Start a dividend in Year 2. Grow it with earnings, paying out 15% to 40% of earnings per share. Buy back shares when we have surplus cash and low leverage.</li>
+        <li><b>4. Manage leverage on purpose.</b> As profits build up equity, leverage naturally falls. We hold it in the 1.8 to 2.8 band using dividends and buybacks. We do not retire cheap debt to do this, because that pushes leverage the wrong way.</li>
+        <li><b>5. Check before every save.</b> Four tests must pass: all R&D projects finish inside the year, leverage is in the band, cash is above the floor, and profit is on target. Interest costs stay under 4.5% of sales.</li>
+      </ul>
+
+      <p><b>If things go wrong.</b> If sales miss badly, the cash floor absorbs the first hit and we cut production, not price, in the next round. If our credit rating falls, we pause plant spending until it recovers. If a rival starts a price war, we defend only in the price-sensitive segments and take margin in the rest.</p>
+
+      <p class="tiny">Evidence: this exact approach was tested over eight practice rounds. Result: zero emergency loans, leverage in or near the band every year, and a share price that rose about five times while funding the largest plant program in the industry.</p>
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§5 Targets, Forecasts and KPI Weightings <span class="chip c-open">DRAFT v2, numbers finalise with Round 1 actuals (Sun 19 to Mon 20)</span></h3>
+
+      <p><b>Objective.</b> Set clear, measurable targets for all seven years so every round decision can be tested against a number, and so the final report can judge success against what we said at the start.</p>
+
+      <p><b>Assumptions behind the forecasts.</b></p>
+      <ul>
+        <li><b>Market growth is known and fixed.</b> The simulation publishes segment growth rates: Traditional 9.2%, Low End 11.7%, High End 16.2%, Performance 19.8%, Size 18.3% per year. Total market demand roughly doubles by 2033.</li>
+        <li><b>Market share.</b> All six companies start equal at 16.7%. We assume we can build to about 20% by Year 4 and hold it, by having the best-rated product in each segment and never running out of stock.</li>
+        <li><b>Prices fall.</b> Every segment's price range drops $0.50 each year. Revenue growth must come from volume and share, not price.</li>
+        <li><b>Margins improve.</b> Automation, TQM and HR investment lift contribution margin by roughly 1 to 1.5 points a year, from about 28% at the start to 38% or better by Year 7. This is based on our practice-round results, not hope.</li>
+        <li><b>Year 1 profit is low on purpose.</b> Depreciation and interest from early plant investment hit profit before the benefits arrive. This is planned, not a miss.</li>
+        <li><b>Competitors are rational.</b> We assume rivals price sensibly and revise products on time. If they do not, our results should beat these targets.</li>
+      </ul>
+
+      <div class="grid g2" style="margin:12px 0">
+        <div class="card" style="background:var(--panel2)"><h3>Sales target ($M)</h3><div id="chart-bp-sales"></div></div>
+        <div class="card" style="background:var(--panel2)"><h3>Net income target ($M)</h3><div id="chart-bp-ni"></div></div>
+      </div>
+      <table>
+        <thead><tr><th>Year</th><th>Sales</th><th>Net income</th><th>ROE</th><th>Leverage</th><th>Mkt share</th><th>Stock</th></tr></thead>
+        <tbody>
+          <tr><td>2027 (R1)</td><td>$110 to 120M</td><td>$3 to 6M</td><td>7 to 10%</td><td>1.9 to 2.2</td><td>≈16.7%</td><td>≥$36</td></tr>
+          <tr><td>2028 (R2)</td><td>$125 to 135M</td><td>$8 to 11M</td><td>14%+</td><td>in band</td><td>17.5%</td><td>$45+</td></tr>
+          <tr><td>2029 (R3)</td><td>$140 to 150M</td><td>$10 to 14M</td><td>16%+</td><td>in band</td><td>18%</td><td>$55+</td></tr>
+          <tr><td>2030 (R4)</td><td>$155 to 170M</td><td>$14 to 18M</td><td>20%+</td><td>in band</td><td>19%</td><td>$70+</td></tr>
+          <tr><td>2031 (R5)</td><td>$170 to 185M</td><td>$18 to 24M</td><td>22%+</td><td>in band</td><td>20%</td><td>$90+</td></tr>
+          <tr><td>2032 (R6)</td><td>$185 to 200M</td><td>$24 to 30M</td><td>25%+</td><td>in band</td><td>20%+</td><td>$115+</td></tr>
+          <tr><td>2033 (R7)</td><td>$200M+</td><td>$28M+</td><td>25%+</td><td>in band</td><td>21%</td><td>$140+ · #1 cumulative profit</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px"><b>Standing targets that apply every year:</b> no emergency loans, ever. No stockouts on premium products from Year 2. Contribution margin at least 30% by Year 2, rising to at least 38% by Year 7. A dividend paid every year from Year 2. Every product updated within the year, every year (Low End is deliberately left to age, which its customers prefer).</p>
+      <p><b>How we track it:</b> after each round we compare actuals to this table on the team dashboard. Any miss of more than 10% gets a one-line explanation and, if needed, a decision change in the next round.</p>
+      <p><b>KPI weightings.</b> How the syndicate scores itself each round:</p>
+      <table>
+        <thead><tr><th>Dimension</th><th>Weight</th><th>Measures</th></tr></thead>
+        <tbody>
+          <tr><td>Shareholder return</td><td><b>30%</b></td><td>Stock price, EPS, dividend</td></tr>
+          <tr><td>Profitability</td><td><b>25%</b></td><td>Net income, contribution margin</td></tr>
+          <tr><td>Competitive position</td><td><b>20%</b></td><td>Market share, product CSS leadership</td></tr>
+          <tr><td>Balance-sheet safety</td><td><b>15%</b></td><td>Leverage band, cash floor, no emergency loan</td></tr>
+          <tr><td>Operations & people</td><td><b>10%</b></td><td>Utilisation 90–180%, turnover, R&D on time</td></tr>
+        </tbody>
+      </table>
+      <p class="tiny">These weightings copy how the simulation itself defines success: survive first, then shareholder returns, then the condition of the company at the end. Our internal scoring and the official grading pull in the same direction.</p>
+    </div>
+
+    <div class="card tpl" style="margin-top:14px">
+      <h3 style="margin-top:0">§2 Business Model and Strategy to Win <span class="chip c-open">DRAFT v2, copy-ready</span></h3>
+
+      <p><b>Our strategy in one line.</b> We are a Broad Differentiator with cost discipline: we compete in all five segments, win the premium segments on product quality and reliable supply, win Low End on cost and product age, and convert the profits into shareholder returns.</p>
+
+      <p><b>The six levers, and how we push each one to its maximum.</b></p>
+      <ul>
+        <li><b>1. Product quality.</b> Every product is moved to its segment's ideal spot every year and the update finishes inside the year. Maximised by investing in HR scientists and TQM engineering programs, which cut R&D time by 20% or more. This lets us reach positions rivals cannot reach in a single year. It is a compounding advantage: faster R&D leads to better products, which fund more investment.</li>
+        <li><b>2. Demand multipliers.</b> The demand score is multiplied by awareness and accessibility. We push both toward 100% on volume products with steady promotion and sales budgets, plus the Channel Support program. We also set A/R terms to 60 days from Round 1, cutting a hidden demand-score penalty from 5% (at 30 days) to 1.5%. When cash is deep in later years we can go longer and remove it entirely.</li>
+        <li><b>3. Supply.</b> We forecast from potential demand, not last year's sales, and hold a 10% production cushion. A stockout hands customers to rivals; leftover stock costs a few percent. We buy capacity and automation early (Years 1 to 3) so supply never caps our best products.</li>
+        <li><b>4. Cost.</b> Automation on the volume lines first, TQM cost programs from mid-game, and reliability specs set to the bottom of the range in price-driven segments. Target: contribution margin climbs from about 28% to 38% or better by Year 7.</li>
+        <li><b>5. Cash and capital.</b> The cash floor and matched funding keep us out of emergency loans. From Year 2 profits flow back to shareholders as dividends and buybacks, which is exactly what the share price formula rewards.</li>
+        <li><b>6. Intelligence.</b> We read the Courier as a weapon every round: rival stockouts are free customers, rivals locked in long R&D projects are free share, and mispriced products are free margin. Demand splits in proportion to survey scores, so widening the gap between our score and theirs is worth as much as raising our own. Decisions are locked hours before each deadline.</li>
+      </ul>
+
+      <p><b>Timing plan across the seven years.</b></p>
+      <ul>
+        <li><b>Years 1 to 2, commit and build:</b> reposition everything, buy automation on volume lines, start HR and TQM, accept modest profit. Decide on a second High End product in Round 1 (two years to build, sells from Year 3).</li>
+        <li><b>Years 3 to 5, lead:</b> best product in each segment, supply matched to potential, margins expanding, dividends growing.</li>
+        <li><b>Years 6 to 7, harvest:</b> no new plant, maximum production, maximum shareholder returns, balance sheet clean for the next management team.</li>
+      </ul>
+
+      <p><b>What could beat us, and our response.</b> A rival who copies the product-quality game: we out-invest them early, because the time-lag effects mean the first mover keeps the lead. A Low End price war: we have the lowest costs, so we can follow price down and still profit, or hold price and bank margin when capacity is tight. A crowded premium segment: our R&D speed lets us reach next year's ideal while they sit at this year's.</p>
+    </div>
+  </div><!-- /tab-biz -->
+
+  <div id="tab-pitch" class="tabpane">
+    <div class="card" style="margin-top:20px;border-color:#e3c98a">
+      <b>Report + Investor Pitch — due Tue 11 Aug 12:00pm · 60% of grade</b>
+      <div class="muted" style="margin-top:4px">Kickoff Thu 23 Jul · journey sections rolling (solid by Wed 5 Aug) · pitch script locked Fri 7 Aug · record/rehearse Sat 8–Mon 10</div>
+    </div>
+    <div class="card" style="margin-top:14px;padding:6px 8px">
+      <table>
+        <thead><tr><th>§</th><th>Section</th><th>Pts</th><th>Owner</th><th>Finalise</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Team intro + restate initial strategic plan</td><td>2/20</td><td>Akshaya</td><td>from Thu 23 Jul</td></tr>
+          <tr><td>2a</td><td>Journey review — R&D/Product</td><td>3.5/20</td><td>Ben</td><td>rolling → Wed 5 Aug</td></tr>
+          <tr><td>2b</td><td>Journey review — Marketing</td><td>3.5/20</td><td>Akshaya</td><td>rolling → Wed 5 Aug</td></tr>
+          <tr><td>2c</td><td>Journey review — Production</td><td>3.5/20</td><td>Rohit</td><td>rolling → Wed 5 Aug</td></tr>
+          <tr><td>2d</td><td>Journey review — Finance</td><td>3.5/20</td><td><b>Mitchell</b></td><td>rolling → Wed 5 Aug</td></tr>
+          <tr><td>3</td><td>Overall success — KPI achievement, causal synthesis</td><td>4/20</td><td>Ben</td><td>after R6, Wed 5 Aug</td></tr>
+          <tr><td>4</td><td>Path forward — 2–3 priorities for next mgmt team</td><td><b>10/20</b></td><td>Rohit (rev. Ben)</td><td>Fri–Sat 7–8 Aug</td></tr>
+          <tr><td>5</td><td>Forecasts + proforma statements</td><td><b>10/20</b></td><td><b>Mitchell</b></td><td>after R7, Sat 8 Aug 5pm</td></tr>
+          <tr><td>6</td><td>Investor pitch (presentation)</td><td><b>15</b></td><td>All · narrative lead Ben</td><td>script Fri 7 Aug</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>How Claude helps each week</h3>
+        <ul class="clean">
+          <li>📥 Each Courier → journey-review notes per department (evidence bank for §2a–2d, built round by round, never a last-minute scramble)</li>
+          <li>📊 Trend charts on Market Intel tab become the report's exhibits</li>
+          <li>💰 §5 proforma: 7-year model maintained live — R7 actuals drop in on the final Saturday</li>
+          <li>🎤 Pitch: investor-lens narrative (returns, EPS, dividends, end-state) — Mitchell's home turf</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Pitch skeleton (investor logic)</h3>
+        <ul class="clean">
+          <li><b>1.</b> Who we are & the strategy we committed to in year 1</li>
+          <li><b>2.</b> What we built — positions, plant, people (the compounding machine)</li>
+          <li><b>3.</b> What it earned — profit trajectory, ROE, stock price vs rivals</li>
+          <li><b>4.</b> What you're buying — end-state balance sheet, year-8 forecasts</li>
+          <li><b>5.</b> Why the next team wins — 2–3 priorities, funded and de-risked</li>
+        </ul>
+      </div>
+    </div>
+  </div><!-- /tab-pitch -->
+
+  <div class="foot">Last updated: 11 Jul 2026 · Drop new course info to Claude and this page gets rebuilt.</div>
+</div>
+
+<script>
+// ==== DATA (easy to extend) ====
+// type: open|close|live|due|meet|info  · star:true = inferred
+const EVENTS = [
+ {d:"2026-07-08 20:15", type:"meet", label:"Open office hour (W1)"},
+ {d:"2026-07-09 12:00", type:"due",  label:"Practice rounds — minimum 4 complete"},
+ {d:"2026-07-10 17:00", type:"info", label:"Syndicate groups announced (by Friday W1)"},
+ {d:"2026-07-14 12:00", type:"due",  label:"Syndicate Charter due (midday)"},
+ {d:"2026-07-14 12:00", type:"open", label:"Round 1 opens"},
+ {d:"2026-07-16 19:30", type:"meet", label:"Syndicate office hours with Robyn (Thu 7:30pm) + Business Plan kickoff"},
+ {d:"2026-07-17 23:59", type:"due",  label:"Preliminary Syndicate Review Part 1 — INDIVIDUAL (template in Review tab)"},
+ {d:"2026-07-18 09:00", type:"due",  label:"Syndicate Review Part 2 — feedback-on-feedback opens (do it!)", star:true},
+ {d:"2026-07-18 18:00", type:"close",label:"Round 1 closes (6pm)"},
+ {d:"2026-07-18 19:00", type:"live", label:"Live debrief · Round 1 (7pm — special time)"},
+ {d:"2026-07-18 19:45", type:"open", label:"Round 2 opens"},
+ {d:"2026-07-20 18:00", type:"meet", label:"Team meeting IN PERSON @MBS — finalise Business Plan with R1 results"},
+ {d:"2026-07-21 12:00", type:"due",  label:"BUSINESS PLAN DUE (20% of grade) — Tue midday"},
+ {d:"2026-07-22 19:30", type:"close",label:"Round 2 closes (Wed 7:30pm)"},
+ {d:"2026-07-22 20:15", type:"live", label:"Live debrief · Round 2 (Wed 8:15pm)"},
+ {d:"2026-07-22 21:00", type:"open", label:"Round 3 opens (Wed 9pm)"},
+ {d:"2026-07-23 19:30", type:"meet", label:"Syndicate office hours 7:30pm + kick off Report & Presentation"},
+ {d:"2026-07-30 19:30", type:"meet", label:"Syndicate office hours with Robyn (Thu 7:30pm)"},
+ {d:"2026-08-06 19:30", type:"meet", label:"Syndicate office hours with Robyn (Thu 7:30pm)"},
+ {d:"2026-07-25 17:00", type:"close",label:"Round 3 closes (Sat 5pm)"},
+ {d:"2026-07-25 18:00", type:"live", label:"Live debrief · Round 3 (Sat 6pm)"},
+ {d:"2026-07-25 19:00", type:"open", label:"Round 4 opens (Sat 7pm)"},
+ {d:"2026-07-29 19:30", type:"close",label:"Round 4 closes (Wed 7:30pm)"},
+ {d:"2026-07-29 20:15", type:"live", label:"Live debrief · Round 4 (Wed 8:15pm)"},
+ {d:"2026-07-29 21:00", type:"open", label:"Round 5 opens (Wed 9pm)"},
+ {d:"2026-08-01 17:00", type:"close",label:"Round 5 closes (Sat 5pm)"},
+ {d:"2026-08-01 18:00", type:"live", label:"Live debrief · Round 5 (Sat 6pm)"},
+ {d:"2026-08-01 19:00", type:"meet", label:"Mid-project review — check progress vs report sections"},
+ {d:"2026-08-01 19:00", type:"open", label:"Round 6 opens (Sat 7pm)"},
+ {d:"2026-08-05 19:30", type:"close",label:"Round 6 closes (Wed 7:30pm)"},
+ {d:"2026-08-05 20:15", type:"live", label:"Live debrief · Round 6 (Wed 8:15pm)"},
+ {d:"2026-08-05 21:00", type:"open", label:"Round 7 opens (Wed 9pm) — FINAL round"},
+ {d:"2026-08-05 21:00", type:"due",  label:"Presentation script drafted by tonight (per charter plan)"},
+ {d:"2026-08-07 19:00", type:"due",  label:"Investor pitch script locked (Fri 7 Aug)"},
+ {d:"2026-08-08 17:00", type:"close",label:"Round 7 CLOSES (Sat 5pm) — final syndicate round"},
+ {d:"2026-08-08 18:00", type:"meet", label:"Sat–Mon: finalise report, record/rehearse presentation"},
+ {d:"2026-08-11 12:00", type:"due",  label:"SYNDICATE REPORT + PRESENTATION DUE (60% of grade) — Tue midday"},
+ {d:"2026-08-11 12:00", type:"open", label:"Comp-XM opens (Tue 12pm) — INDIVIDUAL"},
+ {d:"2026-08-11 13:00", type:"info", label:"Comp-XM brief: 4 rounds solo as Andrews vs 3 bots · 4 renamed segments · 5 Board Query sets (MCQs on YOUR results) · same engine, playbook transfers"},
+ {d:"2026-08-12 09:00", type:"open", label:"Peer feedback to syndicate members opens"},
+ {d:"2026-08-13 19:00", type:"meet", label:"Open office hour (W6, Thu 7pm)"},
+ {d:"2026-08-14 23:59", type:"due",  label:"Peer feedback due (Fri 11:59pm)"},
+ {d:"2026-08-16 23:59", type:"due",  label:"Feedback loop (review + respond) due"},
+ {d:"2026-08-18 12:00", type:"due",  label:"COMP-XM CLOSES (20%, hurdle) — Tue midday"},
+ {d:"2026-08-18 18:00", type:"live", label:"Celebration — in person @MBS & online (Tue 6pm)"},
+];
+
+const DELIV = [
+ {item:"Practice rounds ×4 (min)", who:"Individual", due:"✅ done", done:true},
+ {item:"Syndicate Charter ✅", who:"Syndicate", due:"Tue 14 Jul 12pm", done:true},
+ {item:"Preliminary Syndicate Review (2.5%)", who:"Individual", due:"Fri 17 Jul 11:59pm"},
+ {item:"BUSINESS PLAN (20%)", who:"Syndicate", due:"Tue 21 Jul 12pm"},
+ {item:"Round decisions ×7", who:"Syndicate", due:"Wed 7:30pm / Sat 5pm closes"},
+ {item:"REPORT + PRESENTATION (60%)", who:"Syndicate", due:"Tue 11 Aug 12pm"},
+ {item:"Peer feedback + loop", who:"Individual", due:"Fri 14 / Sun 16 Aug"},
+ {item:"COMP-XM (20%, hurdle)", who:"Individual", due:"Tue 18 Aug 12pm"},
+];
+
+// ==== RENDER ====
+const CHIP={open:["c-open","OPENS"],close:["c-close","CLOSES"],live:["c-live","DEBRIEF"],due:["c-due","DUE"],meet:["c-meet","MEETING"],info:["c-info","INFO"]};
+const now=new Date();
+const fmt=d=>d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+const fmtT=d=>d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}).replace(" ","").toLowerCase();
+
+const tb=document.querySelector("#sched tbody");
+EVENTS.forEach(e=>{
+  const dt=new Date(e.d.replace(" ","T")+"+10:00");
+  const tr=document.createElement("tr");
+  const past=dt<now; if(past)tr.className="past";
+  if(dt.toDateString()===now.toDateString())tr.className="today";
+  const[c,t]=CHIP[e.type];
+  tr.innerHTML=`<td class="day">${fmt(dt)}<small>${fmtT(dt)}</small></td>
+    <td><span class="chip ${c}">${past?"✓ ":""}${t}</span></td>
+    <td>${e.label}${e.star?' <span class="star">✱</span>':""}</td>`;
+  tb.appendChild(tr);
+});
+
+const db=document.getElementById("deliv");
+DELIV.forEach(d=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${d.done?"✅ ":""}${d.item}</td><td class="muted">${d.who}</td><td class="muted">${d.due}</td>`;
+  if(d.done)tr.className="past";
+  db.appendChild(tr);
+});
+
+// ==== MARKET INTEL DATA (append a round each week) ====
+const COMPANIES=["Andrews","Baldwin","Chester","Digby","Erie","Ferris"];
+const CCOLOR={Andrews:"#f0647a",Baldwin:"#4f8ef7",Chester:"#3ecf8e",Digby:"#f5b83d",Erie:"#a78bfa",Ferris:"#5eead4"};
+const ROUNDS=[
+ {r:1,yr:2027,profit:[-25235,10301,5861,8481,6405,9398],sales:[44978,140271,134019,131932,126211,128060],
+  cm:[9.7,32.5,28.4,32.6,28.4,32.4],eloan:[84258,0,0,0,0,0],
+  read:["Emergency loan $84M — out of the race","Leader: top-of-range pricing, on-time revisions","Mid-pack; Cedar auto 6.5 = LE cost play","Solid all-round; Duck strong in HE","Weak HE (Echo mispositioned); Egg locked to 2028","Strong #2; disciplined pricing"]}
+];
+
+function barChart(el,vals,fmt){
+  const w=440,bh=26,gap=10,max=Math.max(...vals.map(Math.abs));
+  let s=`<svg viewBox="0 0 ${w} ${(bh+gap)*vals.length}" style="width:100%">`;
+  vals.forEach((v,i)=>{
+    const y=i*(bh+gap),bw=Math.max(3,Math.abs(v)/max*(w-150)),x=110;
+    s+=`<text x="0" y="${y+bh-8}" fill="#54657a" font-size="12">${COMPANIES[i]}</text>`;
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh-6}" rx="4" fill="${v<0?"#f0647a":CCOLOR[COMPANIES[i]]}" opacity="${v<0?1:.85}"/>`;
+    s+=`<text x="${x+bw+6}" y="${y+bh-8}" fill="#1c2733" font-size="12">${fmt(v)}</text>`;});
+  el.innerHTML=s+"</svg>";
+}
+function renderIntel(){
+  const d=ROUNDS[ROUNDS.length-1];
+  const money=v=>"$"+(v/1000).toFixed(1)+"M";
+  barChart(document.getElementById("chart-profit"),d.profit,money);
+  barChart(document.getElementById("chart-sales"),d.sales,money);
+  const tb=document.querySelector("#intel-table tbody");tb.innerHTML="";
+  COMPANIES.forEach((c,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td style="color:${CCOLOR[c]};font-weight:600">${c}</td><td>${money(d.profit[i])}</td><td>${money(d.sales[i])}</td><td>${d.cm[i]}%</td><td>${d.eloan[i]?'<span class="chip c-close">'+money(d.eloan[i])+"</span>":"—"}</td><td class="muted">${d.read[i]}</td>`;
+    tb.appendChild(tr);});
+  if(ROUNDS.length>1){
+    const el=document.getElementById("chart-trend"),w=640,h=220,max=Math.max(...ROUNDS.flatMap(r=>r.profit)),min=Math.min(...ROUNDS.flatMap(r=>r.profit));
+    const X=r=>40+(r/(ROUNDS.length-1))*(w-80),Y=v=>15+(1-(v-min)/(max-min))*(h-40);
+    let s=`<svg viewBox="0 0 ${w} ${h}" style="width:100%">`;
+    COMPANIES.forEach((c,i)=>{s+=`<polyline fill="none" stroke="${CCOLOR[c]}" stroke-width="2" points="${ROUNDS.map((r,j)=>X(j)+","+Y(r.profit[i])).join(" ")}"/>`;});
+    el.innerHTML=s+"</svg><div class='tiny'>Profit by round — colors match scorecard</div>";
+  }
+}
+renderIntel();
+
+// Business-plan target charts (plain bar charts, one value label per year)
+function yearBars(el,years,vals,color){
+  if(!el)return;
+  const w=430,h=180,max=Math.max(...vals),bw=(w-40)/vals.length-12;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="width:100%">`;
+  vals.forEach((v,i)=>{
+    const x=30+i*((w-40)/vals.length),bh=(v/max)*(h-52),y=h-28-bh;
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${color}" opacity=".9"/>`;
+    s+=`<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" fill="#1c2733" font-size="11" font-weight="600">${v}</text>`;
+    s+=`<text x="${x+bw/2}" y="${h-10}" text-anchor="middle" fill="#8b99a9" font-size="10">${years[i]}</text>`;});
+  el.innerHTML=s+"</svg>";
+}
+const BP_YEARS=["'27","'28","'29","'30","'31","'32","'33"];
+yearBars(document.getElementById("chart-bp-sales"),BP_YEARS,[115,130,145,162,178,193,210],"#2f6fe4");
+yearBars(document.getElementById("chart-bp-ni"),BP_YEARS,[4.5,9.5,12,16,21,27,31.5],"#1c9e6c");
+
+function showTab(t){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  document.querySelectorAll(".tabpane").forEach(p=>p.classList.toggle("on",p.id==="tab-"+t));
+}
+
+// next-up banner
+const upcoming=EVENTS.map(e=>({...e,dt:new Date(e.d.replace(" ","T")+"+10:00")})).filter(e=>e.dt>now).sort((a,b)=>a.dt-b.dt)[0];
+if(upcoming){
+  document.getElementById("nx-what").textContent=upcoming.label;
+  document.getElementById("nx-when").textContent=fmt(upcoming.dt)+" · "+fmtT(upcoming.dt);
+  const hrs=(upcoming.dt-now)/36e5;
+  document.getElementById("nx-count").textContent=hrs<48?`in ${Math.round(hrs)}h`:`in ${Math.round(hrs/24)} days`;
+}
+</script>
+</body>
+</html>
